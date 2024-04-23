@@ -1,12 +1,34 @@
 import pygame
 import time
-
+import random
 pygame.init()
 
 ANCHO, ALTO = 800, 800
 pantalla = pygame.display.set_mode((ANCHO, ALTO))
 pygame.display.set_caption("Pantalla de Selección de Equipos")
 
+#Crear reloj,para controlar los fps 
+reloj = pygame.time.Clock()
+
+#Cargar sprites de moneda
+imagen = "gold_{}.png"
+lista_sprites_lanzamiento_moneda=[]
+fotograma_moneda=0
+estado = 1 #Para hacer la secuencia
+
+#Resultado de moneda,se coloca entre 0 y dos debido a que se quiere el entero en este caso.
+resultado_moneda = int( random.uniform(0,2) )  
+
+
+#Cargar animacion de la moneda dependiendo del resultado
+if resultado_moneda == 0:
+    for i in range(1,21):
+        image_filename = imagen.format(i)
+        lista_sprites_lanzamiento_moneda.append(pygame.image.load(image_filename))
+else:
+    for i in range(20, 0, -1): 
+        image_filename = imagen.format(i)
+        lista_sprites_lanzamiento_moneda.append(pygame.image.load(image_filename))
 
 BLANCO = (255, 255, 255)
 NEGRO = (0, 0, 0)
@@ -63,6 +85,7 @@ def seleccionar_siguiente_jugador():
             indice_equipo = 0
 
 # Main loop
+lanzamiento_moneda = 0
 corriendo = True
 indice_equipo = 0
 indice_jugador = 0
@@ -79,35 +102,44 @@ while corriendo:
             if evento.key == pygame.K_SPACE:
                 seleccion_pausada = not seleccion_pausada
 
-    # Cambia la seleccion del jugador cada 2 segundos
-    if not seleccion_pausada:
-        tiempo_actual = time.time()
-        if tiempo_actual - inicio_tiempo >= 2:
-            seleccionar_siguiente_jugador()
-            inicio_tiempo = tiempo_actual
+    if estado == 1 and fotograma_moneda<19:
+            pantalla.blit(lista_sprites_lanzamiento_moneda[int(fotograma_moneda )],(2,3))
+            fotograma_moneda += 0.32
+    else:
+        estado = 2
 
-    # Nombre de los equipos
-    for equipo in equipos:
-        fuente = pygame.font.Font(None, 36)
-        texto = fuente.render(equipo.nombre, True, BLANCO)
-        rect_texto = texto.get_rect(center=(ANCHO // 2, equipo.jugadores[0].posicion[1] - 100))
-        pantalla.blit(texto, rect_texto)
+    if estado == 2:
+        # Cambia la seleccion del jugador cada 2 segundos
+        if not seleccion_pausada:
+            tiempo_actual = time.time()
+            if tiempo_actual - inicio_tiempo >= 2:
+                seleccionar_siguiente_jugador()
+                inicio_tiempo = tiempo_actual
 
-        # Jugadores
-        for jugador in equipo.jugadores:
-            jugador.dibujar()
+        # Nombre de los equipos
+        for equipo in equipos:
+            fuente = pygame.font.Font(None, 36)
+            texto = fuente.render(equipo.nombre, True, BLANCO)
+            rect_texto = texto.get_rect(center=(ANCHO // 2, equipo.jugadores[0].posicion[1] - 100))
+            pantalla.blit(texto, rect_texto)
 
-        # Portero
-        equipo.portero.dibujar()
+            # Jugadores
+            for jugador in equipo.jugadores:
+                jugador.dibujar()
 
-    # Resaltar jugador seleccionado si no es None
-    jugador_seleccionado = equipos[indice_equipo].jugadores[indice_jugador]
-    if isinstance(jugador_seleccionado, Portero):
-        indice_jugador += 1
-        if indice_jugador >= len(equipos[indice_equipo].jugadores):
-            indice_jugador = 0
+            # Portero
+            equipo.portero.dibujar()
+
+        # Resaltar jugador seleccionado si no es None
         jugador_seleccionado = equipos[indice_equipo].jugadores[indice_jugador]
-    pygame.draw.rect(pantalla, (255, 255, 0), (jugador_seleccionado.posicion[0]-45, jugador_seleccionado.posicion[1]-45, 90, 90), width=2)
+        if isinstance(jugador_seleccionado, Portero):
+            indice_jugador += 1
+            if indice_jugador >= len(equipos[indice_equipo].jugadores):
+                indice_jugador = 0
+            jugador_seleccionado = equipos[indice_equipo].jugadores[indice_jugador]
+        pygame.draw.rect(pantalla, (255, 255, 0), (jugador_seleccionado.posicion[0]-45, jugador_seleccionado.posicion[1]-45, 90, 90), width=2)
+
+    reloj.tick(60)
 
     pygame.display.flip()
 
