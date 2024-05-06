@@ -155,9 +155,10 @@ show_selected_players_screen = False
 timer_reset_count = 0
 
 inicio_tiempo = time.time()
+
 #fuente 
 font = pygame.font.Font(None, 24)
-
+fuente = pygame.font.Font(None, 36)
 
 def Mostrar_Jugadora_Seleccionada(players):
     pantalla.fill(NEGRO)
@@ -169,6 +170,13 @@ def Mostrar_Jugadora_Seleccionada(players):
         texto2 = fuente.render(f"{player.equipo.nombre} - {player.nombre}", True, BLANCO)
         pantalla.blit(texto2, (ANCHO // 2 - texto2.get_width() // 2, ALTO // 4 + 50 + i * 50))
     pygame.display.flip()
+
+#Renderizar texto en pantalla
+def texto_pantalla(texto,aa,color,x,y):
+    texto = font.render(texto, aa, color)
+    pantalla.blit(texto,(x,y))
+
+
 
 while corriendo:
     pantalla.fill(NEGRO)
@@ -187,7 +195,6 @@ while corriendo:
         #Inicializar lectura del potenciometro
         
         rasp_coneccion.write((str('potenciometro') + ',').encode())
-            
         lectura = rasp_coneccion.readline().decode('unicode_escape')
         seleccion_jugador=str(lectura  )
 
@@ -197,6 +204,7 @@ while corriendo:
             if len(Jugadora_selecionada) == 2:
                 show_selected_players_screen = True
             estado = 2
+
         #seleccion de jugadores a traves del potenciometro
         elif float( seleccion_jugador  ) < 0.5:        
             indice_equipo = 0
@@ -247,37 +255,44 @@ while corriendo:
 
         if inicio_tiempo is not None:
             elapsed_time = time.time() - inicio_tiempo
-            remaining_time = max(0, 5 - elapsed_time)
+            remaining_time = max(0, 10 - elapsed_time)
 
         # Mensaje para mostrar cómo continuar
-        if elapsed_time >= 5:
-            text = font.render("El timer ha terminado, presiona espacio para continuar", True, BLANCO)
-            text_rect = text.get_rect(center=(ANCHO // 2, ALTO - 20))
-            pantalla.blit(text, text_rect)
 
         if inicio_tiempo is not None:
             elapsed_time = time.time() - inicio_tiempo
         if elapsed_time >= 5 and len(Jugadora_selecionada) < 2 and timer_reset_count < 1:
             Jugadora_selecionada.append(equipos[indice_equipo].jugadores[indice_jugador])
-            inicio_tiempo = None
             timer_reset_count += 1
-        text = font.render(f'Tiene {int(remaining_time)} para seleccionar al primer jugador,cuando el contador termine,seleccione al segundo jugador.', True, BLANCO)
-        pantalla.blit(text,(0,0))
+
+        if elapsed_time >= 10:
+            text = font.render("El timer ha terminado, presiona espacio para continuar", True, BLANCO)
+            text_rect = text.get_rect(center=(ANCHO // 2, ALTO - 20))
+            pantalla.blit(text, text_rect)
+            elapsed_time = 0
+
+        texto_pantalla('Tiene 5 seg para seleccionar al primer jugador,luego otros 5 para el segundo jugador', True, BLANCO,0,0)
+        texto_pantalla(f'{int(elapsed_time)}',True,BLANCO,0,20)
+
 
 
     elif estado == 2 and fotograma_moneda < 19:
         pantalla.blit(lista_sprites_lanzamiento_moneda[int(fotograma_moneda)], (2, 3))
-        fotograma_moneda += 0.3
+        fotograma_moneda += 0.09
         if int(fotograma_moneda ) == 19:
             estado = 3
     
     elif estado == 3 :
+        #Mostrar jugadoras en pantalla
         if show_selected_players_screen:
             Mostrar_Jugadora_Seleccionada(Jugadora_selecionada)
         time.sleep(3)
         estado = 4
 
     elif estado == 4:
+        texto_pantalla(f'Turno de{inicio}',True,BLANCO,0,20)
+
+        #Cambio boton personalizado
         pygame.mixer.Sound.play(abucheo)
         pygame.mixer.Sound.play(pitido_inicial)
 
