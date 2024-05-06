@@ -155,12 +155,15 @@ show_selected_players_screen = False
 timer_reset_count = 0
 
 inicio_tiempo = time.time()
+#fuente 
+font = pygame.font.Font(None, 24)
 
 
 def Mostrar_Jugadora_Seleccionada(players):
     pantalla.fill(NEGRO)
     fuente = pygame.font.Font(None, 36)
     texto1 = fuente.render("Jugadoras Seleccionadas:", True, BLANCO)
+
     pantalla.blit(texto1, (ANCHO // 2 - texto1.get_width() // 2, ALTO // 4))
     for i, player in enumerate(players):
         texto2 = fuente.render(f"{player.equipo.nombre} - {player.nombre}", True, BLANCO)
@@ -174,14 +177,9 @@ while corriendo:
         if evento.type == pygame.QUIT:
             corriendo = False
 
-    if estado == 1 and fotograma_moneda < 19:
-        pantalla.blit(lista_sprites_lanzamiento_moneda[int(fotograma_moneda)], (2, 3))
-        fotograma_moneda += 0.3
-        if int(fotograma_moneda ) == 19:
-            estado = 2
-    
+  
 
-    elif estado == 2:
+    if estado == 1:
 
 
         key = pygame.key.get_pressed()
@@ -198,8 +196,8 @@ while corriendo:
                 Jugadora_selecionada.append(equipos[indice_equipo].jugadores[indice_jugador])
             if len(Jugadora_selecionada) == 2:
                 show_selected_players_screen = True
-            estado = 3
-
+            estado = 2
+        #seleccion de jugadores a traves del potenciometro
         elif float( seleccion_jugador  ) < 0.5:        
             indice_equipo = 0
             indice_jugador = 0
@@ -253,17 +251,26 @@ while corriendo:
 
         # Mensaje para mostrar cómo continuar
         if elapsed_time >= 5:
-            font = pygame.font.Font(None, 24)
             text = font.render("El timer ha terminado, presiona espacio para continuar", True, BLANCO)
             text_rect = text.get_rect(center=(ANCHO // 2, ALTO - 20))
             pantalla.blit(text, text_rect)
 
         if inicio_tiempo is not None:
             elapsed_time = time.time() - inicio_tiempo
-        if elapsed_time >= 5 and len(Jugadora_selecionada) < 2 and timer_reset_count <= 2:
+        if elapsed_time >= 5 and len(Jugadora_selecionada) < 2 and timer_reset_count < 1:
             Jugadora_selecionada.append(equipos[indice_equipo].jugadores[indice_jugador])
             inicio_tiempo = None
             timer_reset_count += 1
+        text = font.render(f'Tiene {int(remaining_time)} para seleccionar al primer jugador,cuando el contador termine,seleccione al segundo jugador.', True, BLANCO)
+        pantalla.blit(text,(0,0))
+
+
+    elif estado == 2 and fotograma_moneda < 19:
+        pantalla.blit(lista_sprites_lanzamiento_moneda[int(fotograma_moneda)], (2, 3))
+        fotograma_moneda += 0.3
+        if int(fotograma_moneda ) == 19:
+            estado = 3
+    
     elif estado == 3 :
         if show_selected_players_screen:
             Mostrar_Jugadora_Seleccionada(Jugadora_selecionada)
