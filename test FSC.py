@@ -1,6 +1,9 @@
 import pygame
 import time
 import random
+import serial
+rasp_coneccion = serial.Serial('COM4', 9600)
+
 pygame.init()
 
 ANCHO, ALTO = 800, 800
@@ -156,28 +159,49 @@ while corriendo:
     for evento in pygame.event.get():
         if evento.type == pygame.QUIT:
             corriendo = False
-        elif evento.type == pygame.KEYDOWN:
-            if evento.key == pygame.K_SPACE:
-                if len(Jugadora_selecionada) < 2:
-                    Jugadora_selecionada.append(equipos[indice_equipo].jugadores[indice_jugador])
-                if len(Jugadora_selecionada) == 2:
-                    show_selected_players_screen = True
-            elif evento.key == pygame.K_RIGHT:
-                indice_jugador += 1
-                if indice_jugador >= len(equipos[indice_equipo].jugadores):
-                    indice_jugador = 0
-            elif evento.key == pygame.K_LEFT:
-                indice_jugador -= 1
-                if indice_jugador < 0:
-                    indice_jugador = len(equipos[indice_equipo].jugadores) - 1
-            elif evento.key == pygame.K_DOWN:
-                indice_equipo += 1
-                if indice_equipo >= len(equipos):
-                    indice_equipo = 0
-            elif evento.key == pygame.K_UP:
-                indice_equipo -= 1
-                if indice_equipo < 0:
-                    indice_equipo = len(equipos) - 1
+
+
+    key = pygame.key.get_pressed()
+
+    #Inicializar lectura del potenciometro
+    
+    rasp_coneccion.write((str('potenciometro') + ',').encode())
+    
+        
+    lectura = rasp_coneccion.readline().decode('unicode_escape')
+    seleccion_jugador=str(lectura  )
+
+
+    if key[pygame.K_SPACE]:
+        if len(Jugadora_selecionada) < 2:
+            Jugadora_selecionada.append(equipos[indice_equipo].jugadores[indice_jugador])
+        if len(Jugadora_selecionada) == 2:
+            show_selected_players_screen = True
+
+    elif float( seleccion_jugador  ) < 0.5:        
+        indice_equipo = 0
+        indice_jugador = 0
+
+    elif float( seleccion_jugador  ) >= 0.5 and float( seleccion_jugador  ) < 1:
+        indice_equipo=0
+        indice_jugador = 1
+
+    elif float( seleccion_jugador  ) >= 1 and float( seleccion_jugador  ) < 1.5:
+        indice_equipo = 1
+        indice_jugador = 0
+
+    elif float( seleccion_jugador  ) >= 1.5 and float( seleccion_jugador  ) < 2:
+        indice_equipo = 1
+        indice_jugador = 1
+
+    elif float( seleccion_jugador  ) >= 2 and float( seleccion_jugador  ) < 2.5:
+        indice_equipo = 2
+        indice_jugador = 0
+
+    elif float( seleccion_jugador  ) >= 2.5 and float( seleccion_jugador  ) < 3:
+        indice_equipo = 2
+        indice_jugador = 1
+
 
     if estado == 1 and fotograma_moneda < 19:
         pantalla.blit(lista_sprites_lanzamiento_moneda[int(fotograma_moneda)], (2, 3))
