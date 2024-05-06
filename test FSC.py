@@ -21,6 +21,17 @@ estado = 1  # Para hacer la secuencia
 
 # Resultado de moneda, se coloca entre 0 y dos debido a que se quiere el entero en este caso.
 resultado_moneda = int(random.uniform(0, 2))
+#Lograr saber quien inicia si local o visitante
+inicio = 0
+if resultado_moneda==0:
+    inicio = 'local'
+else:
+    inicio = 'visitante'
+
+#Cargar sonidos
+abucheo = pygame.mixer.Sound('boo.mp3')
+pitido_inicial = pygame.mixer.Sound('referee.mp3')
+
 
 if resultado_moneda == 0:
     for i in range(1, 21):
@@ -143,6 +154,9 @@ show_selected_players_screen = False
 
 timer_reset_count = 0
 
+inicio_tiempo = time.time()
+
+
 def Mostrar_Jugadora_Seleccionada(players):
     pantalla.fill(NEGRO)
     fuente = pygame.font.Font(None, 36)
@@ -160,56 +174,57 @@ while corriendo:
         if evento.type == pygame.QUIT:
             corriendo = False
 
-
-    key = pygame.key.get_pressed()
-
-    #Inicializar lectura del potenciometro
-    
-    rasp_coneccion.write((str('potenciometro') + ',').encode())
-    
-        
-    lectura = rasp_coneccion.readline().decode('unicode_escape')
-    seleccion_jugador=str(lectura  )
-
-
-    if key[pygame.K_SPACE]:
-        if len(Jugadora_selecionada) < 2:
-            Jugadora_selecionada.append(equipos[indice_equipo].jugadores[indice_jugador])
-        if len(Jugadora_selecionada) == 2:
-            show_selected_players_screen = True
-
-    elif float( seleccion_jugador  ) < 0.5:        
-        indice_equipo = 0
-        indice_jugador = 0
-
-    elif float( seleccion_jugador  ) >= 0.5 and float( seleccion_jugador  ) < 1:
-        indice_equipo=0
-        indice_jugador = 1
-
-    elif float( seleccion_jugador  ) >= 1 and float( seleccion_jugador  ) < 1.5:
-        indice_equipo = 1
-        indice_jugador = 0
-
-    elif float( seleccion_jugador  ) >= 1.5 and float( seleccion_jugador  ) < 2:
-        indice_equipo = 1
-        indice_jugador = 1
-
-    elif float( seleccion_jugador  ) >= 2 and float( seleccion_jugador  ) < 2.5:
-        indice_equipo = 2
-        indice_jugador = 0
-
-    elif float( seleccion_jugador  ) >= 2.5 and float( seleccion_jugador  ) < 3:
-        indice_equipo = 2
-        indice_jugador = 1
-
-
     if estado == 1 and fotograma_moneda < 19:
         pantalla.blit(lista_sprites_lanzamiento_moneda[int(fotograma_moneda)], (2, 3))
-        fotograma_moneda += 0.32
-    else:
-        estado = 2
+        fotograma_moneda += 0.3
+        if int(fotograma_moneda ) == 19:
+            estado = 2
+    
 
-    if estado == 2:
+    elif estado == 2:
+
+
+        key = pygame.key.get_pressed()
+
+        #Inicializar lectura del potenciometro
+        
+        rasp_coneccion.write((str('potenciometro') + ',').encode())
+            
+        lectura = rasp_coneccion.readline().decode('unicode_escape')
+        seleccion_jugador=str(lectura  )
+
+        if key[pygame.K_SPACE]:
+            if len(Jugadora_selecionada) < 2:
+                Jugadora_selecionada.append(equipos[indice_equipo].jugadores[indice_jugador])
+            if len(Jugadora_selecionada) == 2:
+                show_selected_players_screen = True
+            estado = 3
+
+        elif float( seleccion_jugador  ) < 0.5:        
+            indice_equipo = 0
+            indice_jugador = 0
+
+        elif float( seleccion_jugador  ) >= 0.5 and float( seleccion_jugador  ) < 1:
+            indice_equipo=0
+            indice_jugador = 1
+
+        elif float( seleccion_jugador  ) >= 1 and float( seleccion_jugador  ) < 1.5:
+            indice_equipo = 1
+            indice_jugador = 0
+
+        elif float( seleccion_jugador  ) >= 1.5 and float( seleccion_jugador  ) < 2:
+            indice_equipo = 1
+            indice_jugador = 1
+
+        elif float( seleccion_jugador  ) >= 2 and float( seleccion_jugador  ) < 2.5:
+            indice_equipo = 2
+            indice_jugador = 0
+
+        elif float( seleccion_jugador  ) >= 2.5 and float( seleccion_jugador  ) < 3:
+            indice_equipo = 2
+            indice_jugador = 1
+
+
         for equipo in equipos:
             fuente = pygame.font.Font(None, 36)
             texto = fuente.render(equipo.nombre, True, BLANCO)
@@ -235,9 +250,6 @@ while corriendo:
         if inicio_tiempo is not None:
             elapsed_time = time.time() - inicio_tiempo
             remaining_time = max(0, 5 - elapsed_time)
-            font = pygame.font.Font(None, 36)
-            text = font.render(f"Tiempo: {remaining_time:.1f}", True, BLANCO)
-            pantalla.blit(text, (20, 20))
 
         # Mensaje para mostrar cómo continuar
         if elapsed_time >= 5:
@@ -246,28 +258,39 @@ while corriendo:
             text_rect = text.get_rect(center=(ANCHO // 2, ALTO - 20))
             pantalla.blit(text, text_rect)
 
-    reloj.tick(60)
-
-    pygame.display.flip()
-
-    if show_selected_players_screen:
-        Mostrar_Jugadora_Seleccionada(Jugadora_selecionada)
-        waiting_for_interaction = True
-        while waiting_for_interaction:
-            for evento in pygame.event.get():
-                if evento.type == pygame.KEYDOWN:
-                    if evento.key == pygame.K_SPACE:
-                        waiting_for_interaction = False
-                    elif evento.key == pygame.K_ESCAPE:
-                        corriendo = False
-
-    if inicio_tiempo is not None:
-        elapsed_time = time.time() - inicio_tiempo
-        if elapsed_time >= 5 and len(Jugadora_selecionada) < 2 and timer_reset_count < 1:
+        if inicio_tiempo is not None:
+            elapsed_time = time.time() - inicio_tiempo
+        if elapsed_time >= 5 and len(Jugadora_selecionada) < 2 and timer_reset_count <= 2:
             Jugadora_selecionada.append(equipos[indice_equipo].jugadores[indice_jugador])
             inicio_tiempo = None
             timer_reset_count += 1
-    else:
-        inicio_tiempo = time.time()
+    elif estado == 3 :
+        if show_selected_players_screen:
+            Mostrar_Jugadora_Seleccionada(Jugadora_selecionada)
+        time.sleep(3)
+        estado = 4
+
+    elif estado == 4:
+        pygame.mixer.Sound.play(abucheo)
+        pygame.mixer.Sound.play(pitido_inicial)
+
+        
+
+
+
+    #Inicializador de variables
+
+
+
+
+
+
+    reloj.tick(60)
+
+
+
+    pygame.display.flip()
+
+    
 
 pygame.quit()
