@@ -312,7 +312,6 @@ while corriendo:
         pygame.mixer.Sound.play(pitido_inicial)
         time.sleep(3)
         estado = 'tiro'
-
         #Cambio boton personalizado
         #pygame.mixer.Sound.play(abucheo)
     
@@ -357,6 +356,8 @@ while corriendo:
             inicio_turno = 'Visitante'
         
         estado = 1#SE modicia al final,es estado 3
+        segundos_turno = 0
+        print(estado)
         turno += 1
 
 
