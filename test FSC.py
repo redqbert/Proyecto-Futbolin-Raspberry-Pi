@@ -22,15 +22,16 @@ estado = 1  # Para hacer la secuencia
 # Resultado de moneda, se coloca entre 0 y dos debido a que se quiere el entero en este caso.
 resultado_moneda = int(random.uniform(0, 2))
 #Lograr saber quien inicia si local o visitante
-inicio = 0
+inicio_turno = 0
 if resultado_moneda==0:
-    inicio = 'local'
+    inicio_turno = 'Local'
 else:
-    inicio = 'visitante'
+    inicio_turno = 'Visitante'
 
 #Cargar sonidos
 abucheo = pygame.mixer.Sound('boo.mp3')
 pitido_inicial = pygame.mixer.Sound('referee.mp3')
+tiros = pygame.mixer.Sound('tiros.mp3')
 
 
 if resultado_moneda == 0:
@@ -176,8 +177,25 @@ def texto_pantalla(texto,aa,color,x,y):
     texto = font.render(texto, aa, color)
     pantalla.blit(texto,(x,y))
 
+turno = 0
+
+segundos_turno = 0
+
+lectura_porteria='No'
 
 
+def eliminar_saltos_y_espacios(texto):
+  
+  texto_sin_saltos = texto.replace('\n', '')
+
+  texto_sin_espacios = texto_sin_saltos.strip()
+
+  return ' '.join(texto_sin_espacios.split())
+
+#Paletas por indice
+paletas_indice_1=[ ['A','B'],['C','D'],['E','F'] ]
+paletas_indice_2=[ ['A','B','C'],['D','E','F'] ]
+paletas_indice_3= [['A','C','E'],['B','D','F']]
 while corriendo:
     pantalla.fill(NEGRO)
 
@@ -187,7 +205,7 @@ while corriendo:
 
   
 
-    if estado == 1:
+    if estado == 4:
 
 
         key = pygame.key.get_pressed()
@@ -289,14 +307,58 @@ while corriendo:
         time.sleep(3)
         estado = 4
 
-    elif estado == 4:
-        texto_pantalla(f'Turno de{inicio}',True,BLANCO,0,20)
+    elif estado == 1 and turno <= 9 :
+        texto_pantalla(f'Turno de {inicio_turno}',True,BLANCO,ANCHO//2,ALTO//2)
+        pygame.mixer.Sound.play(pitido_inicial)
+        time.sleep(3)
+        estado = 'tiro'
 
         #Cambio boton personalizado
-        pygame.mixer.Sound.play(abucheo)
-        pygame.mixer.Sound.play(pitido_inicial)
+        #pygame.mixer.Sound.play(abucheo)
+    
 
+
+    elif estado == 'tiro':
+
+
+        #Poscion del portero
+        indice = int(  random.uniform(1, 4) )#Generar numero aleatorio para saber que indice es
+        if indice==1:
+            portero = paletas_indice_1[ int(  random.uniform( 0,3 ) ) ]
+
+        elif indice==2:
+            portero = paletas_indice_2[ int(  random.uniform( 0,2 ) ) ]
+
+        elif indice==3:
+            portero = paletas_indice_3[ int(  random.uniform( 0,2 ) ) ]
+
+        pygame.mixer.Sound.play(tiros)
         
+        while segundos_turno<=5:
+            
+            rasp_coneccion.write((str('porteria') + ',').encode()) #Abrir para escribir porteria en rasberry
+            lectura_porteria = str(rasp_coneccion.readline().decode('unicode_escape')) #Lectura porteria
+            lectura_porteria = eliminar_saltos_y_espacios(lectura_porteria) #Quitar espacios y saltos de linea a la lectura de la porteria
+            time.sleep(1)
+            if lectura_porteria != 'No':
+                break
+            segundos_turno +=1
+
+        if lectura_porteria == 'No':
+            pygame.mixer.Sound.play(abucheo)
+        
+        for elemento in portero:#Comprobar a cada elemento de portero,para saber si atrapo el balon
+            if elemento == lectura_porteria:
+                pygame.mixer.Sound.play(abucheo)
+
+        if inicio_turno == 'Visitante':
+            inicio_turno = 'Local'
+        elif inicio_turno == 'Local':
+            inicio_turno = 'Visitante'
+        
+        estado = 1#SE modicia al final,es estado 3
+        turno += 1
+
 
 
 
