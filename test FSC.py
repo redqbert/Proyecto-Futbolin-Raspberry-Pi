@@ -2,7 +2,7 @@ import pygame
 import time
 import random
 import serial
-rasp_coneccion = serial.Serial('COM4', 9600)
+rasp_coneccion = serial.Serial('COM3', 9600)
 
 pygame.init()
 
@@ -330,6 +330,11 @@ while corriendo:
 
     elif estado == 'tiro':
 
+        """ if inicio_turno=="Local":
+            rasp_coneccion.write((str('ledlocal') + ',').encode()) #Abrir para escribir porteria en rasberry
+        elif inicio_turno=="Visitante":
+            rasp_coneccion.write((str('ledvisitante') + ',').encode()) #Abrir para escribir porteria en rasberry
+        """
 
         #Poscion del portero
         indice = int(  random.uniform(1, 4) )#Generar numero aleatorio para saber que indice es
@@ -351,13 +356,14 @@ while corriendo:
             rasp_coneccion.write((str('porteria') + ',').encode()) #Abrir para escribir porteria en rasberry
             lectura_porteria = str(rasp_coneccion.readline().decode('unicode_escape')) #Lectura porteria
             lectura_porteria = eliminar_saltos_y_espacios(lectura_porteria) #Quitar espacios y saltos de linea a la lectura de la porteria
+            print(lectura_porteria)
             time.sleep(1)
             if lectura_porteria != 'No':# Se esta tocanto alguna paleta,por lo que el no representa que no se toca ninguna
                 break
             segundos_turno +=1
 
 
-        if lectura_porteria == 'No':
+        if lectura_porteria == 'No':#Para casos en los que no se jugo
             pygame.mixer.Sound.play(abucheo)
             rasp_coneccion.write((str('fallogol') + ',').encode()) #Luces de la porteria para los fallos
             time.sleep(2)
@@ -372,7 +378,6 @@ while corriendo:
                     break
                 else:
                     anotacion = True
-                    pygame.mixer.Sound.play(abucheo)
 
         if anotacion == True:
             pygame.mixer.Sound.play(gol)
