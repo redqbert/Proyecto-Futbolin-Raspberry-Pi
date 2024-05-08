@@ -32,7 +32,7 @@ else:
 abucheo = pygame.mixer.Sound('boo.mp3')
 pitido_inicial = pygame.mixer.Sound('referee.mp3')
 tiros = pygame.mixer.Sound('tiros.mp3')
-
+gol = pygame.mixer.Sound('gol.mp3')
 
 if resultado_moneda == 0:
     for i in range(1, 21):
@@ -184,6 +184,10 @@ segundos_turno = 0
 lectura_porteria='No'
 
 
+#Anotacion inicializa en verdadero,si no hay anotacion se vuelve a falsa
+anotacion = False
+
+
 def eliminar_saltos_y_espacios(texto):
   
   texto_sin_saltos = texto.replace('\n', '')
@@ -196,6 +200,11 @@ def eliminar_saltos_y_espacios(texto):
 paletas_indice_1=[ ['A','B'],['C','D'],['E','F'] ]
 paletas_indice_2=[ ['A','B','C'],['D','E','F'] ]
 paletas_indice_3= [['A','C','E'],['B','D','F']]
+
+puntaje_visitante = 0
+puntaje_local = 0
+
+
 while corriendo:
     pantalla.fill(NEGRO)
 
@@ -308,10 +317,12 @@ while corriendo:
         estado = 4
 
     elif estado == 1 and turno <= 9 :
-        texto_pantalla(f'Turno de {inicio_turno}',True,BLANCO,ANCHO//2,ALTO//2)
         pygame.mixer.Sound.play(pitido_inicial)
+        texto_pantalla(f'Turno de {inicio_turno}',True,BLANCO,ANCHO//2,ALTO//2)
+
         time.sleep(3)
         estado = 'tiro'
+
         #Cambio boton personalizado
         #pygame.mixer.Sound.play(abucheo)
     
@@ -332,47 +343,67 @@ while corriendo:
             portero = paletas_indice_3[ int(  random.uniform( 0,2 ) ) ]
 
         pygame.mixer.Sound.play(tiros)
-        
-        while segundos_turno<=5:
-            
+
+    
+        while segundos_turno<=6:
+            texto_pantalla(f"Puntaje visitante: {puntaje_visitante}",False,BLANCO,ANCHO/2,ALTO/2-300)
+            texto_pantalla(f"Puntaje local: {puntaje_local}",False,BLANCO,ANCHO/2,ALTO/2-200)
             rasp_coneccion.write((str('porteria') + ',').encode()) #Abrir para escribir porteria en rasberry
             lectura_porteria = str(rasp_coneccion.readline().decode('unicode_escape')) #Lectura porteria
             lectura_porteria = eliminar_saltos_y_espacios(lectura_porteria) #Quitar espacios y saltos de linea a la lectura de la porteria
             time.sleep(1)
-            if lectura_porteria != 'No':
+            if lectura_porteria != 'No':# Se esta tocanto alguna paleta,por lo que el no representa que no se toca ninguna
                 break
             segundos_turno +=1
 
+
         if lectura_porteria == 'No':
             pygame.mixer.Sound.play(abucheo)
-        
-        for elemento in portero:#Comprobar a cada elemento de portero,para saber si atrapo el balon
-            if elemento == lectura_porteria:
-                pygame.mixer.Sound.play(abucheo)
+            rasp_coneccion.write((str('fallogol') + ',').encode()) #Luces de la porteria para los fallos
+            time.sleep(2)
+            anotacion = False
+
+        if lectura_porteria !="No":
+            for elemento in portero:#Comprobar a cada elemento de portero,para saber si atrapo el balon
+                if elemento == lectura_porteria:
+                    anotacion = False
+                    rasp_coneccion.write((str('fallogol') + ',').encode()) #Luces de la porteria para los fallos
+                    time.sleep(2)
+                    break
+                else:
+                    anotacion = True
+                    pygame.mixer.Sound.play(abucheo)
+
+        if anotacion == True:
+            pygame.mixer.Sound.play(gol)
+            rasp_coneccion.write((str('gol') + ',').encode()) #Luces de la porteria
+            time.sleep(2)
+            if inicio_turno == 'Visitante':
+                puntaje_visitante+=1
+            elif inicio_turno == "Local":
+                puntaje_local+=1 
 
         if inicio_turno == 'Visitante':
             inicio_turno = 'Local'
         elif inicio_turno == 'Local':
             inicio_turno = 'Visitante'
-        
+
+        # borrelo al momento de crear el menu, seleccion_jugador_automatica es la variable,si se pone que false en el menu,entonces aqui va a meterse hasta que se presione el boton para cambiar jugador
+        # if seleccion_jugador_automatica==False: este es el codigo para el menu
+        #    while True:
+        #        rasp_coneccion.write((str('cambio_jugador') + ',').encode()) 
+        #        boton = str(rasp_coneccion.readline().decode('unicode_escape')) 
+        #        boton = eliminar_saltos_y_espacios(boton) 
+        #        if boton == "cambio":
+        #            break
+          
         estado = 1#SE modicia al final,es estado 3
+        anotacion = False
         segundos_turno = 0
         print(estado)
         turno += 1
 
-
-
-
-    #Inicializador de variables
-
-
-
-
-
-
     reloj.tick(60)
-
-
 
     pygame.display.flip()
 
