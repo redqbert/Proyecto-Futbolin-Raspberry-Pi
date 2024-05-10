@@ -42,9 +42,9 @@ def inicio_juego(seleccion_jugador_automatica):
     #Lograr saber quien inicia si local o visitante
     inicio_turno = 0
     if resultado_moneda==0:
-        inicio_turno = 'Local'
+        inicio_turno = "Local"
     else:
-        inicio_turno = 'Visitante'
+        inicio_turno = "Visitante"
 
     #Cargar sonidos
     abucheo = pygame.mixer.Sound('boo.mp3')
@@ -219,9 +219,6 @@ def inicio_juego(seleccion_jugador_automatica):
     paletas_indice_2=[ ['A','B','C'],['D','E','F'] ]
     paletas_indice_3= [['A','C','E'],['B','D','F']]
 
-    puntaje_visitante = 0
-    puntaje_local = 0
-
     seleccion_jugador_automatica=['falso']
 
     while corriendo:
@@ -324,11 +321,10 @@ def inicio_juego(seleccion_jugador_automatica):
 
         elif estado == 3 and fotograma_moneda < 19:
             pantalla.blit(lista_sprites_lanzamiento_moneda[int(fotograma_moneda)], (2, 3))
-            fotograma_moneda += 0.09
+            fotograma_moneda += 0.3
             if int(fotograma_moneda ) == 19:
                 estado = 4
-            texto_pantalla(f'Empieza {inicio_turno}')
-            time.sleep(2)
+                texto_pantalla(f'Empieza {inicio_turno}',True,BLANCO,ANCHO/2,ALTO/2)
         
         elif estado == 2 :
             #Mostrar jugadoras en pantalla
@@ -340,7 +336,6 @@ def inicio_juego(seleccion_jugador_automatica):
         elif estado == 4 and turno <= 9 :
             pygame.mixer.Sound.play(pitido_inicial)
             texto_pantalla(f'Turno de {inicio_turno}',True,BLANCO,ANCHO//2,ALTO//2)
-
             time.sleep(3)
             estado = 'tiro'
 
@@ -350,7 +345,7 @@ def inicio_juego(seleccion_jugador_automatica):
 
 
         elif estado == 'tiro':
-            #Para encender led de local o visitante
+            #Para encender led de local o visitante 
             if inicio_turno=="Local":
                 rasp_coneccion.write((str('ledlocal') + ',').encode()) #Abrir para escribir porteria en rasberry
             elif inicio_turno=="Visitante":
@@ -371,15 +366,16 @@ def inicio_juego(seleccion_jugador_automatica):
             pygame.mixer.Sound.play(tiros)
 
         
-            while segundos_turno<=6:
+            while segundos_turno<=4:
                 #Para encender led de local o visitante
+                """
                 if inicio_turno=="Local":
                     rasp_coneccion.write((str('ledlocal') + ',').encode()) #Abrir para escribir porteria en rasberry
                 elif inicio_turno=="Visitante":
                     rasp_coneccion.write((str('ledvisitante') + ',').encode()) #Abrir para escribir porteria en rasberry
-            
-                texto_pantalla(f"Puntaje visitante: {puntaje_visitante}",False,BLANCO,ANCHO/2,ALTO/2-300)
-                texto_pantalla(f"Puntaje local: {puntaje_local}",False,BLANCO,ANCHO/2,ALTO/2-200)
+                """
+                texto_pantalla(f"Puntaje visitante: {acertados_visitante}",False,BLANCO,ANCHO/2,ALTO/2-300)
+                texto_pantalla(f"Puntaje local: {acertados_local}",False,BLANCO,ANCHO/2,ALTO/2-200)
                 rasp_coneccion.write((str('porteria') + ',').encode()) #Abrir para escribir porteria en rasberry
                 lectura_porteria = str(rasp_coneccion.readline().decode('unicode_escape')) #Lectura porteria
                 lectura_porteria = eliminar_saltos_y_espacios(lectura_porteria) #Quitar espacios y saltos de linea a la lectura de la porteria
@@ -389,11 +385,7 @@ def inicio_juego(seleccion_jugador_automatica):
                 segundos_turno +=1
 
             #Para encender led de local o visitante
-            if inicio_turno=="Local":
-                rasp_coneccion.write((str('ledlocal') + ',').encode()) #Abrir para escribir porteria en rasberry
-            elif inicio_turno=="Visitante":
-                rasp_coneccion.write((str('ledvisitante') + ',').encode()) #Abrir para escribir porteria en rasberry
-            
+
             if lectura_porteria == 'No':#Para casos en los que no se jugo
                 if inicio_turno=="Local":
                     tiros_fallidos_visitante+=1
@@ -418,40 +410,46 @@ def inicio_juego(seleccion_jugador_automatica):
                         break
                     else:
                         anotacion = True
+            print("esta aqui")
 
             if anotacion == True:
                 pygame.mixer.Sound.play(gol)
                 rasp_coneccion.write((str('gol') + ',').encode()) #Luces de la porteria
                 time.sleep(2)
                 if inicio_turno == 'Visitante':
-                    puntaje_visitante+=1
                     acertados_visitante+=1
                 elif inicio_turno == "Local":
-                    puntaje_local+=1 
                     acertados_local+=1
             if inicio_turno == 'Visitante':
                 inicio_turno = 'Local'
             elif inicio_turno == 'Local':
                 inicio_turno = 'Visitante'
-
-            if seleccion_jugador_automatica==['falso']: 
+            print("o aqui")
+            
+            """if seleccion_jugador_automatica==['falso']: 
                while True:
+                    pantalla.fill(BLANCO)
                     texto_pantalla("Presione el boton para cambiar de jugador a portero y de portero a jugador",False,BLANCO,ANCHO/2,ALTO/2-300)
                     rasp_coneccion.write((str('cambio_jugador') + ',').encode()) 
                     boton = str(rasp_coneccion.readline().decode('unicode_escape')) 
                     boton = eliminar_saltos_y_espacios(boton) 
                     if boton == "cambio":
                         break
-            
-            estado = 1#SE modicia al final,es estado 3
+            """
+            rasp_coneccion.write((str('ledvlapagar') + ',').encode()) #Luces de la porteria para los fallos
+            print("aqui2")
+            estado = 4
             anotacion = False
             segundos_turno = 0
             print(estado)
             turno += 1
+
+
             if turno == 10:
                 estado = 5
 
         elif estado == 5:
+            pantalla.fill(NEGRO)
             texto_pantalla("Resumen de estadisticas",False,BLANCO,ANCHO/2,ALTO/2-350)
             texto_pantalla(f"Goles acertados por visitante: {acertados_visitante}",False,BLANCO,ANCHO/2,ALTO/2-300)
             texto_pantalla(f"Goles acertados por local: {acertados_local}",False,BLANCO,ANCHO/2,ALTO/2-200)
