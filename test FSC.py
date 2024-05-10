@@ -10,7 +10,7 @@ pygame.init()
 ANCHO, ALTO = 800, 800
 pantalla = pygame.display.set_mode((ANCHO, ALTO))
 pygame.display.set_caption("Pantalla de Selección de Equipos")
-seleccion_jugador_automatica=['falso']
+seleccion_jugador_automatica=['verdadero']
 
 
 
@@ -434,7 +434,7 @@ def inicio_juego(seleccion_jugador_automatica):
             elif inicio_turno == 'Local':
                 inicio_turno = 'Visitante'
 
-            if seleccion_jugador_automatica==False: 
+            if seleccion_jugador_automatica==['falso']: 
                while True:
                     texto_pantalla("Presione el boton para cambiar de jugador a portero y de portero a jugador",False,BLANCO,ANCHO/2,ALTO/2-300)
                     rasp_coneccion.write((str('cambio_jugador') + ',').encode()) 
@@ -502,8 +502,8 @@ def menu():
 
     menu.add.button('Play', inicio_juego,Cambio_de_jugador)#Presionar para jugar
     menu.add.selector('Cambio de jugador',
-                            [('automatico', 'falso'),
-                                ('manual', 'verdadero')],
+                            [('automatico', 'verdadero'),
+                                ('manual', 'falso')],
                             onchange=Cambio_de_jugador,
                             selector_id='Cambio_de_jugador')
     menu.add.button('About', about_menu)#Presionar para jugar
